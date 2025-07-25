@@ -1,0 +1,9 @@
+VehicleOrderTrigger
+
+trigger VehicleOrderTrigger on Vehicle_Order__c (before insert, before update) {
+    if (Trigger.isBefore) {
+        if (Trigger.isInsert || Trigger.isUpdate) {
+            VehicleOrderTriggerHandler.handleBeforeInsertUpdate(Trigger.new);
+        }
+    }
+}

@@ -1,0 +1,33 @@
+VehicleOrderTriggerHandler
+
+
+public class VehicleOrderTriggerHandler {
+    public static void handleBeforeInsertUpdate(List<Vehicle_Order__c> orderList) {
+        Set<Id> vehicleIds = new Set<Id>();
+        for (Vehicle_Order__c order : orderList) {
+            if (order.Vehicle__c != null) {
+                vehicleIds.add(order.Vehicle__c);
+            }
+        }
+
+        Map<Id, Vehicle__c> vehicleMap = new Map<Id, Vehicle__c>(
+            [SELECT Id, Stock_Quantity__c FROM Vehicle__c WHERE Id IN :vehicleIds]
+        );
+
+        for (Vehicle_Order__c order : orderList) {
+            if (order.Vehicle__c != null && vehicleMap.containsKey(order.Vehicle__c)) {
+                Vehicle__c vehicle = vehicleMap.get(order.Vehicle__c);
+
+                if (order.Status__c == 'Confirmed') {
+                    if (vehicle.Stock_Quantity__c <= 0) {
+                        order.addError('Vehicle is out of stock.');
+                    } else {
+                        vehicle.Stock_Quantity__c -= 1;
+                    }
+                }
+            }
+        }
+
+        update vehicleMap.values(); // Update stock
+    }
+}
